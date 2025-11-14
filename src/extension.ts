@@ -28,6 +28,14 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.commands.registerCommand('auto-theme-switcher.configure', configureThemes)
     );
 
+    context.subscriptions.push(
+        vscode.commands.registerCommand('auto-theme-switcher.selectLightTheme', selectLightTheme)
+    );
+
+    context.subscriptions.push(
+        vscode.commands.registerCommand('auto-theme-switcher.selectDarkTheme', selectDarkTheme)
+    );
+
     // Listen for configuration changes
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(e => {
@@ -197,15 +205,23 @@ function switchThemeNow() {
     vscode.window.showInformationMessage('Theme updated based on current time');
 }
 
+async function selectLightTheme() {
+    await selectTheme('lightTheme', '☀️ Select your daytime (light) theme');
+}
+
+async function selectDarkTheme() {
+    await selectTheme('darkTheme', '🌙 Select your nighttime (dark) theme');
+}
+
 async function configureThemes() {
     const config = vscode.workspace.getConfiguration('autoThemeSwitcher');
     
     const options = [
-        'Change light theme',
-        'Change dark theme',
-        'Configure light theme start hour',
-        'Configure dark theme start hour',
-        'Configure check interval'
+        '☀️ Change light theme',
+        '🌙 Change dark theme',
+        '🌅 Configure light theme start hour',
+        '🌙 Configure dark theme start hour',
+        '⏱️ Configure check interval'
     ];
 
     const choice = await vscode.window.showQuickPick(options, {
@@ -217,63 +233,87 @@ async function configureThemes() {
     }
 
     switch (choice) {
-        case 'Change light theme':
-            await selectTheme('lightTheme', 'Select light theme');
+        case '☀️ Change light theme':
+            await selectLightTheme();
             break;
-        case 'Change dark theme':
-            await selectTheme('darkTheme', 'Select dark theme');
+        case '🌙 Change dark theme':
+            await selectDarkTheme();
             break;
-        case 'Configure light theme start hour':
+        case '🌅 Configure light theme start hour':
             await configureHour('lightThemeStartHour', 'Enter light theme start hour (0-23)');
             break;
-        case 'Configure dark theme start hour':
+        case '🌙 Configure dark theme start hour':
             await configureHour('darkThemeStartHour', 'Enter dark theme start hour (0-23)');
             break;
-        case 'Configure check interval':
+        case '⏱️ Configure check interval':
             await configureInterval();
             break;
     }
 }
 
 async function selectTheme(configKey: string, prompt: string) {
-    // Get all available themes
+    // Get all available themes dynamically
     const extensions = vscode.extensions.all;
-    const themes: string[] = [];
+    const themesMap = new Map<string, { label: string; uiTheme?: string }>();
     
+    // Scan all extensions for theme contributions
     extensions.forEach(ext => {
         const contributes = ext.packageJSON?.contributes;
         if (contributes?.themes) {
             contributes.themes.forEach((theme: any) => {
-                if (theme.label) {
-                    themes.push(theme.label);
+                if (theme.label || theme.id) {
+                    const themeLabel = theme.label || theme.id;
+                    themesMap.set(themeLabel, {
+                        label: themeLabel,
+                        uiTheme: theme.uiTheme
+                    });
                 }
             });
         }
     });
 
-    // Add default themes
-    const defaultThemes = [
-        'Default Dark Modern',
-        'Default Light Modern',
-        'Default Dark+',
-        'Default Light+',
-        'Visual Studio Dark',
-        'Visual Studio Light'
-    ];
+    // Convert to sorted array
+    const allThemes = Array.from(themesMap.values())
+        .sort((a, b) => a.label.localeCompare(b.label));
 
-    const allThemes = [...new Set([...defaultThemes, ...themes])].sort();
+    // Create quick pick items with details
+    const quickPickItems = allThemes.map(theme => {
+        let description = '';
+        if (theme.uiTheme === 'vs') {
+            description = '☀️ Light';
+        } else if (theme.uiTheme === 'vs-dark' || theme.uiTheme === 'hc-black') {
+            description = '🌙 Dark';
+        }
+        
+        return {
+            label: theme.label,
+            description: description,
+            detail: theme.uiTheme ? `UI Theme: ${theme.uiTheme}` : undefined
+        };
+    });
 
-    const selectedTheme = await vscode.window.showQuickPick(allThemes, {
-        placeHolder: prompt
+    const selectedTheme = await vscode.window.showQuickPick(quickPickItems, {
+        placeHolder: prompt,
+        matchOnDescription: true,
+        matchOnDetail: true
     });
 
     if (selectedTheme) {
         await vscode.workspace.getConfiguration('autoThemeSwitcher').update(
             configKey,
-            selectedTheme,
+            selectedTheme.label,
             vscode.ConfigurationTarget.Global
         );
-        vscode.window.showInformationMessage(`Theme configured: ${selectedTheme}`);
+        
+        // Apply the theme immediately to preview it
+        await vscode.workspace.getConfiguration('workbench').update(
+            'colorTheme',
+            selectedTheme.label,
+            vscode.ConfigurationTarget.Global
+        );
+        
+        vscode.window.showInformationMessage(`✓ Theme configured and applied: ${selectedTheme.label}`);
+        updateStatusBar();
     }
 }
 

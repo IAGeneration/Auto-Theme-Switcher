@@ -2,7 +2,7 @@
   "name": "auto-theme-switcher",
   "displayName": "Auto Theme Switcher",
   "description": "Automatically switch VS Code theme based on time of day",
-  "version": "1.0.2",
+  "version": "1.0.6",
   "icon": "auto-theme-switcher.png",
   "engines": {
     "vscode": "^1.80.0"
@@ -48,6 +48,14 @@
       {
         "command": "auto-theme-switcher.configure",
         "title": "Auto Theme: Configure"
+      },
+      {
+        "command": "auto-theme-switcher.selectLightTheme",
+        "title": "Auto Theme: Select Light Theme"
+      },
+      {
+        "command": "auto-theme-switcher.selectDarkTheme",
+        "title": "Auto Theme: Select Dark Theme"
       }
     ],
     "configuration": {
@@ -56,63 +64,44 @@
         "autoThemeSwitcher.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Enable/disable automatic theme switching"
+          "markdownDescription": "Enable/disable automatic theme switching based on time",
+          "order": 0
         },
         "autoThemeSwitcher.lightTheme": {
           "type": "string",
           "default": "Default Light Modern",
-          "enum": [
-            "Default Light Modern",
-            "Default Light+",
-            "Visual Studio Light",
-            "Quiet Light",
-            "Solarized Light",
-            "GitHub Light",
-            "Atom One Light"
-          ],
-          "description": "Theme to use during daytime"
+          "markdownDescription": "Theme to use during daytime ☀️\n\n**📝 To select a theme:**\n1. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac)\n2. Type: `Auto Theme: Select Light Theme`\n3. Choose from your installed themes\n\n*Note: VS Code doesn't support dropdown menus in settings, so use the command above to get a visual picker with all your themes.*",
+          "order": 1
         },
         "autoThemeSwitcher.darkTheme": {
           "type": "string",
           "default": "Default Dark Modern",
-          "enum": [
-            "Default Dark Modern",
-            "Default Dark+",
-            "Visual Studio Dark",
-            "Monokai",
-            "Monokai Dimmed",
-            "Dark+ (default dark)",
-            "Abyss",
-            "Red",
-            "Solarized Dark",
-            "Tomorrow Night Blue",
-            "GitHub Dark",
-            "Atom One Dark",
-            "Dracula",
-            "Nord"
-          ],
-          "description": "Theme to use during nighttime"
+          "markdownDescription": "Theme to use during nighttime 🌙\n\n**📝 To select a theme:**\n1. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac)\n2. Type: `Auto Theme: Select Dark Theme`\n3. Choose from your installed themes\n\n*Note: VS Code doesn't support dropdown menus in settings, so use the command above to get a visual picker with all your themes.*",
+          "order": 2
         },
         "autoThemeSwitcher.lightThemeStartHour": {
           "type": "number",
           "default": 7,
           "minimum": 0,
           "maximum": 23,
-          "description": "Hour when light theme starts (0-23)"
+          "markdownDescription": "Hour when light theme activates (0-23) 🌅",
+          "order": 3
         },
         "autoThemeSwitcher.darkThemeStartHour": {
           "type": "number",
           "default": 19,
           "minimum": 0,
           "maximum": 23,
-          "description": "Hour when dark theme starts (0-23)"
+          "markdownDescription": "Hour when dark theme activates (0-23) 🌙",
+          "order": 4
         },
         "autoThemeSwitcher.checkInterval": {
           "type": "number",
           "default": 1,
           "minimum": 1,
           "maximum": 60,
-          "description": "Check interval in minutes"
+          "markdownDescription": "How often to check and switch themes (in minutes) ⏱️",
+          "order": 5
         }
       }
     }
