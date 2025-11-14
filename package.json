@@ -2,7 +2,7 @@
   "name": "auto-theme-switcher",
   "displayName": "Auto Theme Switcher",
   "description": "Automatically switch VS Code theme based on time of day",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "icon": "auto-theme-switcher.png",
   "engines": {
     "vscode": "^1.80.0"
@@ -22,7 +22,7 @@
     "day",
     "night"
   ],
-  "publisher": "Djidjelli Youcef",
+  "publisher": "djidjelli-youcef",
   "repository": {
     "type": "git",
     "url": "git@github.com:IAGeneration/Auto-Theme-Switcher.git"
@@ -33,6 +33,10 @@
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
+      {
+        "command": "auto-theme-switcher.toggleTheme",
+        "title": "Auto Theme: Toggle Light/Dark Theme"
+      },
       {
         "command": "auto-theme-switcher.toggleAutoSwitch",
         "title": "Auto Theme: Toggle Auto Switch"
@@ -57,11 +61,36 @@
         "autoThemeSwitcher.lightTheme": {
           "type": "string",
           "default": "Default Light Modern",
+          "enum": [
+            "Default Light Modern",
+            "Default Light+",
+            "Visual Studio Light",
+            "Quiet Light",
+            "Solarized Light",
+            "GitHub Light",
+            "Atom One Light"
+          ],
           "description": "Theme to use during daytime"
         },
         "autoThemeSwitcher.darkTheme": {
           "type": "string",
           "default": "Default Dark Modern",
+          "enum": [
+            "Default Dark Modern",
+            "Default Dark+",
+            "Visual Studio Dark",
+            "Monokai",
+            "Monokai Dimmed",
+            "Dark+ (default dark)",
+            "Abyss",
+            "Red",
+            "Solarized Dark",
+            "Tomorrow Night Blue",
+            "GitHub Dark",
+            "Atom One Dark",
+            "Dracula",
+            "Nord"
+          ],
           "description": "Theme to use during nighttime"
         },
         "autoThemeSwitcher.lightThemeStartHour": {
@@ -80,7 +109,7 @@
         },
         "autoThemeSwitcher.checkInterval": {
           "type": "number",
-          "default": 5,
+          "default": 1,
           "minimum": 1,
           "maximum": 60,
           "description": "Check interval in minutes"

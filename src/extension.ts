@@ -8,10 +8,14 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Create status bar item
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-    statusBarItem.command = 'auto-theme-switcher.toggleAutoSwitch';
+    statusBarItem.command = 'auto-theme-switcher.toggleTheme';
     context.subscriptions.push(statusBarItem);
 
     // Register commands
+    context.subscriptions.push(
+        vscode.commands.registerCommand('auto-theme-switcher.toggleTheme', toggleTheme)
+    );
+
     context.subscriptions.push(
         vscode.commands.registerCommand('auto-theme-switcher.toggleAutoSwitch', toggleAutoSwitch)
     );
@@ -22,6 +26,25 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(
         vscode.commands.registerCommand('auto-theme-switcher.configure', configureThemes)
+    );
+
+    // Listen for configuration changes
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeConfiguration(e => {
+            if (e.affectsConfiguration('autoThemeSwitcher')) {
+                startAutoSwitch();
+                updateStatusBar();
+            }
+        })
+    );
+
+    // Check theme when window becomes focused
+    context.subscriptions.push(
+        vscode.window.onDidChangeWindowState(e => {
+            if (e.focused) {
+                switchThemeBasedOnTime();
+            }
+        })
     );
 
     // Start automatic checking
@@ -119,6 +142,38 @@ function switchThemeBasedOnTime() {
     }
 
     updateStatusBar();
+}
+
+function toggleTheme() {
+    const config = vscode.workspace.getConfiguration('autoThemeSwitcher');
+    const lightTheme = config.get<string>('lightTheme', 'Default Light Modern');
+    const darkTheme = config.get<string>('darkTheme', 'Default Dark Modern');
+    const currentTheme = vscode.workspace.getConfiguration('workbench').get<string>('colorTheme');
+    
+    // Determine which theme to switch to
+    let targetTheme: string;
+    let targetThemeType: 'light' | 'dark';
+    
+    // If current theme is the light theme, switch to dark, otherwise switch to light
+    if (currentTheme === lightTheme) {
+        targetTheme = darkTheme;
+        targetThemeType = 'dark';
+    } else {
+        targetTheme = lightTheme;
+        targetThemeType = 'light';
+    }
+    
+    // Apply the theme
+    vscode.workspace.getConfiguration('workbench').update(
+        'colorTheme',
+        targetTheme,
+        vscode.ConfigurationTarget.Global
+    ).then(() => {
+        vscode.window.showInformationMessage(
+            `Switched to ${targetThemeType} theme: ${targetTheme}`
+        );
+        updateStatusBar();
+    });
 }
 
 function toggleAutoSwitch() {
@@ -275,27 +330,14 @@ async function configureInterval() {
 function updateStatusBar() {
     const config = vscode.workspace.getConfiguration('autoThemeSwitcher');
     const enabled = config.get<boolean>('enabled', true);
+    const currentTheme = vscode.workspace.getConfiguration('workbench').get<string>('colorTheme');
+    const lightTheme = config.get<string>('lightTheme', 'Default Light Modern');
     
-    if (enabled) {
-        const now = new Date();
-        const currentHour = now.getHours();
-        const lightThemeStartHour = config.get<number>('lightThemeStartHour', 7);
-        const darkThemeStartHour = config.get<number>('darkThemeStartHour', 19);
-        
-        let icon: string;
-        if (lightThemeStartHour < darkThemeStartHour) {
-            icon = (currentHour >= lightThemeStartHour && currentHour < darkThemeStartHour) ? '☀️' : '🌙';
-        } else {
-            icon = (currentHour >= darkThemeStartHour && currentHour < lightThemeStartHour) ? '🌙' : '☀️';
-        }
-        
-        statusBarItem.text = `${icon} Auto Theme`;
-        statusBarItem.tooltip = 'Automatic theme switching active (Click to disable)';
-    } else {
-        statusBarItem.text = '⏸️ Auto Theme';
-        statusBarItem.tooltip = 'Automatic theme switching disabled (Click to enable)';
-    }
+    // Determine icon based on current theme
+    const icon = currentTheme === lightTheme ? '☀️' : '🌙';
     
+    statusBarItem.text = `${icon} Theme`;
+    statusBarItem.tooltip = `Click to toggle theme\n${enabled ? '✓ Auto-switch enabled' : '✗ Auto-switch disabled'}`;
     statusBarItem.show();
 }
 
