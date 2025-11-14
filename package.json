@@ -1,0 +1,107 @@
+{
+  "name": "auto-theme-switcher",
+  "displayName": "Auto Theme Switcher",
+  "description": "Automatically switch VS Code theme based on time of day",
+  "version": "1.0.0",
+  "icon": "auto-theme-switcher.png",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Themes",
+    "Other"
+  ],
+  "keywords": [
+    "theme",
+    "auto",
+    "switch",
+    "time",
+    "dark",
+    "light",
+    "automatic",
+    "day",
+    "night"
+  ],
+  "publisher": "Djidjelli Youcef",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:IAGeneration/Auto-Theme-Switcher.git"
+  },
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "auto-theme-switcher.toggleAutoSwitch",
+        "title": "Auto Theme: Toggle Auto Switch"
+      },
+      {
+        "command": "auto-theme-switcher.switchNow",
+        "title": "Auto Theme: Switch Now"
+      },
+      {
+        "command": "auto-theme-switcher.configure",
+        "title": "Auto Theme: Configure"
+      }
+    ],
+    "configuration": {
+      "title": "Auto Theme Switcher",
+      "properties": {
+        "autoThemeSwitcher.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable/disable automatic theme switching"
+        },
+        "autoThemeSwitcher.lightTheme": {
+          "type": "string",
+          "default": "Default Light Modern",
+          "description": "Theme to use during daytime"
+        },
+        "autoThemeSwitcher.darkTheme": {
+          "type": "string",
+          "default": "Default Dark Modern",
+          "description": "Theme to use during nighttime"
+        },
+        "autoThemeSwitcher.lightThemeStartHour": {
+          "type": "number",
+          "default": 7,
+          "minimum": 0,
+          "maximum": 23,
+          "description": "Hour when light theme starts (0-23)"
+        },
+        "autoThemeSwitcher.darkThemeStartHour": {
+          "type": "number",
+          "default": 19,
+          "minimum": 0,
+          "maximum": 23,
+          "description": "Hour when dark theme starts (0-23)"
+        },
+        "autoThemeSwitcher.checkInterval": {
+          "type": "number",
+          "default": 5,
+          "minimum": 1,
+          "maximum": 60,
+          "description": "Check interval in minutes"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.45.0",
+    "typescript": "^5.1.6"
+  }
+}
+
