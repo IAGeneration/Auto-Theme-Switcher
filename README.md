@@ -1,7 +1,7 @@
-# Auto Theme Switcher
+# Auto Theme Time Switcher
 
 <div >
-  <img src="auto-theme-switcher.png" alt="Auto Theme Switcher Logo" width="150"/>
+  <img src="auto-theme-switcher.png" alt="Auto Theme Time Switcher Logo" width="150"/>
 </div>
 
 An elegant VS Code extension that automatically switches your editor's theme based on the time of day.
