@@ -1,6 +1,6 @@
 {
-  "name": "auto-theme-switcher",
-  "displayName": "Auto Theme Switcher",
+  "name": "auto-theme-time-switcher",
+  "displayName": "Auto Theme Switcher (Time Based)",
   "description": "Automatically switch VS Code theme based on time of day",
   "version": "1.1.0",
   "icon": "auto-theme-switcher.png",
