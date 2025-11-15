@@ -22,10 +22,19 @@
     "day",
     "night"
   ],
-  "publisher": "djidjelli-youcef",
+  "publisher": "DjidjelliYoucef",
+  "license": "MIT",
+  "homepage": "https://github.com/IAGeneration/Auto-Theme-Switcher",
+  "bugs": {
+    "url": "https://github.com/IAGeneration/Auto-Theme-Switcher/issues"
+  },
   "repository": {
     "type": "git",
-    "url": "git@github.com:IAGeneration/Auto-Theme-Switcher.git"
+    "url": "https://github.com/IAGeneration/Auto-Theme-Switcher.git"
+  },
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
   },
   "activationEvents": [
     "onStartupFinished"
@@ -111,7 +120,13 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "pretest": "npm run compile",
-    "lint": "eslint src --ext ts"
+    "lint": "eslint src --ext ts",
+    "package": "npx @vscode/vsce package",
+    "deploy": "npx @vscode/vsce publish",
+    "deploy:patch": "npx @vscode/vsce publish patch",
+    "deploy:minor": "npx @vscode/vsce publish minor",
+    "deploy:major": "npx @vscode/vsce publish major",
+    "install": "./build-and-install.sh"
   },
   "devDependencies": {
     "@types/node": "^18.0.0",
