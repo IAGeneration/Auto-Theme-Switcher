@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.2.1] - 2025-11-15
+### Improvements
+- 12-hour (AM/PM) time format display instead of 24-hour
+- Welcome message on first installation
+- More intuitive interface with 12-hour format throughout
+- Automatic activation enabled by default on first install
+
+### Fixes
+- Improved tooltips and messages with consistent AM/PM format
+
 ## [1.0.6] - 2024-11-14
 - Instant theme preview when selecting themes
 - Theme applies immediately, no reload needed
