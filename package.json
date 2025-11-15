@@ -73,7 +73,7 @@
         "autoThemeSwitcher.enabled": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Enable/disable automatic theme switching based on time",
+          "markdownDescription": "✅ **Enabled by default** - Automatically switch themes based on time of day\n\nWhen enabled, your theme will automatically change between light and dark based on the configured times.",
           "order": 0
         },
         "autoThemeSwitcher.lightTheme": {
@@ -93,7 +93,7 @@
           "default": 7,
           "minimum": 0,
           "maximum": 23,
-          "markdownDescription": "Hour when light theme activates (0-23) 🌅",
+          "markdownDescription": "☀️ **Morning time (AM)** - When to switch to light theme\n\n**Default:** 7:00 AM\n\n📝 Use `Ctrl+Shift+P` → `Auto Theme: Configure`",
           "order": 3
         },
         "autoThemeSwitcher.darkThemeStartHour": {
@@ -101,7 +101,7 @@
           "default": 19,
           "minimum": 0,
           "maximum": 23,
-          "markdownDescription": "Hour when dark theme activates (0-23) 🌙",
+          "markdownDescription": "🌙 **Evening time (PM)** - When to switch to dark theme\n\n**Default:** 7:00 PM\n\n📝 Use `Ctrl+Shift+P` → `Auto Theme: Configure`",
           "order": 4
         },
         "autoThemeSwitcher.checkInterval": {

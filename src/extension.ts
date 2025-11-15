@@ -3,8 +3,38 @@ import * as vscode from 'vscode';
 let statusBarItem: vscode.StatusBarItem;
 let checkInterval: ReturnType<typeof setInterval> | undefined;
 
+// Utility function to format hour in AM/PM format
+function formatHourAMPM(hour: number): string {
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+    return `${hour12}:00 ${period}`;
+}
+
 export function activate(context: vscode.ExtensionContext) {
     console.log('Auto Theme Switcher activated');
+
+    // Ensure auto-switch is enabled on first install
+    const config = vscode.workspace.getConfiguration('autoThemeSwitcher');
+    const enabled = config.inspect<boolean>('enabled');
+    
+    // If user has never set the value (undefined in global), ensure it's true
+    if (enabled?.globalValue === undefined && enabled?.workspaceValue === undefined) {
+        config.update('enabled', true, vscode.ConfigurationTarget.Global);
+        console.log('Auto Theme Switcher: Enabled by default on first install');
+        
+        // Welcome message
+        const lightHour = config.get<number>('lightThemeStartHour', 7);
+        const darkHour = config.get<number>('darkThemeStartHour', 19);
+        vscode.window.showInformationMessage(
+            `🎨 Auto Theme Switcher is now active! Your theme will automatically switch:\n☀️ Light at ${formatHourAMPM(lightHour)} | 🌙 Dark at ${formatHourAMPM(darkHour)}`,
+            'Configure',
+            'Got it'
+        ).then(choice => {
+            if (choice === 'Configure') {
+                vscode.commands.executeCommand('auto-theme-switcher.configure');
+            }
+        });
+    }
 
     // Create status bar item
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -72,17 +102,27 @@ export function deactivate() {
 function startAutoSwitch() {
     const config = vscode.workspace.getConfiguration('autoThemeSwitcher');
     const enabled = config.get<boolean>('enabled', true);
-    const checkIntervalMinutes = config.get<number>('checkInterval', 5);
+    const checkIntervalMinutes = config.get<number>('checkInterval', 1);
+    const lightHour = config.get<number>('lightThemeStartHour', 7);
+    const darkHour = config.get<number>('darkThemeStartHour', 19);
 
     if (checkInterval) {
         clearInterval(checkInterval);
+        checkInterval = undefined;
     }
 
     if (enabled) {
+        console.log(`Auto Theme Switcher: Starting automatic checks every ${checkIntervalMinutes} minute(s)`);
+        console.log(`  ☀️ Light theme: ${formatHourAMPM(lightHour)}`);
+        console.log(`  🌙 Dark theme: ${formatHourAMPM(darkHour)}`);
+        
         // Check every X minutes
         checkInterval = setInterval(() => {
+            console.log('Auto Theme Switcher: Periodic check triggered');
             switchThemeBasedOnTime();
         }, checkIntervalMinutes * 60 * 1000);
+    } else {
+        console.log('Auto Theme Switcher: Auto-switch disabled');
     }
 }
 
@@ -98,6 +138,7 @@ function switchThemeBasedOnTime() {
     const enabled = config.get<boolean>('enabled', true);
 
     if (!enabled) {
+        console.log('Auto Theme Switcher: Disabled, skipping check');
         return;
     }
 
@@ -133,20 +174,25 @@ function switchThemeBasedOnTime() {
         }
     }
 
+    console.log(`Auto Theme Switcher: Current time ${formatHourAMPM(currentHour)}, should use ${targetThemeType} theme`);
+
     // Get current theme
     const currentTheme = vscode.workspace.getConfiguration('workbench').get<string>('colorTheme');
 
     // Change theme only if different
     if (currentTheme !== targetTheme) {
+        console.log(`Auto Theme Switcher: Switching from "${currentTheme}" to "${targetTheme}"`);
         vscode.workspace.getConfiguration('workbench').update(
             'colorTheme',
             targetTheme,
             vscode.ConfigurationTarget.Global
         ).then(() => {
-            vscode.window.showInformationMessage(
-                `Theme switched to: ${targetTheme} (${targetThemeType})`
-            );
+            const message = `🎨 Theme switched to ${targetThemeType}: ${targetTheme} (${formatHourAMPM(currentHour)})`;
+            vscode.window.showInformationMessage(message);
+            console.log('Auto Theme Switcher: ' + message);
         });
+    } else {
+        console.log(`Auto Theme Switcher: Theme already correct (${targetTheme})`);
     }
 
     updateStatusBar();
@@ -219,8 +265,8 @@ async function configureThemes() {
     const options = [
         '☀️ Change light theme',
         '🌙 Change dark theme',
-        '🌅 Configure light theme start hour',
-        '🌙 Configure dark theme start hour',
+        '🌅 Set light theme time (AM/PM)',
+        '🌛 Set dark theme time (AM/PM)',
         '⏱️ Configure check interval'
     ];
 
@@ -239,11 +285,11 @@ async function configureThemes() {
         case '🌙 Change dark theme':
             await selectDarkTheme();
             break;
-        case '🌅 Configure light theme start hour':
-            await configureHour('lightThemeStartHour', 'Enter light theme start hour (0-23)');
+        case '🌅 Set light theme time (AM/PM)':
+            await configureHour('lightThemeStartHour', 'Select when light theme should start ☀️');
             break;
-        case '🌙 Configure dark theme start hour':
-            await configureHour('darkThemeStartHour', 'Enter dark theme start hour (0-23)');
+        case '🌛 Set dark theme time (AM/PM)':
+            await configureHour('darkThemeStartHour', 'Select when dark theme should start 🌙');
             break;
         case '⏱️ Configure check interval':
             await configureInterval();
@@ -318,27 +364,32 @@ async function selectTheme(configKey: string, prompt: string) {
 }
 
 async function configureHour(configKey: string, prompt: string) {
-    const input = await vscode.window.showInputBox({
-        prompt: prompt,
-        value: vscode.workspace.getConfiguration('autoThemeSwitcher').get<number>(configKey)?.toString(),
-        validateInput: (value) => {
-            const num = parseInt(value);
-            if (isNaN(num) || num < 0 || num > 23) {
-                return 'Please enter a number between 0 and 23';
-            }
-            return null;
-        }
+    const config = vscode.workspace.getConfiguration('autoThemeSwitcher');
+    const currentHour = config.get<number>(configKey, 7);
+    
+    // Create quick pick items for each hour with AM/PM format only
+    const hours = [];
+    for (let i = 0; i < 24; i++) {
+        const display = formatHourAMPM(i);
+        hours.push({
+            label: display,
+            hour: i
+        });
+    }
+    
+    const selected = await vscode.window.showQuickPick(hours, {
+        placeHolder: prompt
     });
 
-    if (input) {
-        const hour = parseInt(input);
-        await vscode.workspace.getConfiguration('autoThemeSwitcher').update(
+    if (selected) {
+        await config.update(
             configKey,
-            hour,
+            selected.hour,
             vscode.ConfigurationTarget.Global
         );
-        vscode.window.showInformationMessage(`Hour configured: ${hour}:00`);
+        vscode.window.showInformationMessage(`✓ Hour configured: ${selected.label}`);
         startAutoSwitch(); // Restart with new settings
+        switchThemeBasedOnTime(); // Apply immediately
     }
 }
 
@@ -372,12 +423,27 @@ function updateStatusBar() {
     const enabled = config.get<boolean>('enabled', true);
     const currentTheme = vscode.workspace.getConfiguration('workbench').get<string>('colorTheme');
     const lightTheme = config.get<string>('lightTheme', 'Default Light Modern');
+    const darkTheme = config.get<string>('darkTheme', 'Default Dark Modern');
+    const lightHour = config.get<number>('lightThemeStartHour', 7);
+    const darkHour = config.get<number>('darkThemeStartHour', 19);
     
     // Determine icon based on current theme
     const icon = currentTheme === lightTheme ? '☀️' : '🌙';
     
     statusBarItem.text = `${icon} Theme`;
-    statusBarItem.tooltip = `Click to toggle theme\n${enabled ? '✓ Auto-switch enabled' : '✗ Auto-switch disabled'}`;
+    
+    const tooltipLines = [
+        `Current: ${currentTheme}`,
+        '',
+        `☀️ Light: ${lightTheme} (${formatHourAMPM(lightHour)})`,
+        `🌙 Dark: ${darkTheme} (${formatHourAMPM(darkHour)})`,
+        '',
+        enabled ? '✓ Auto-switch: Enabled' : '✗ Auto-switch: Disabled',
+        '',
+        'Click to toggle light/dark theme'
+    ];
+    
+    statusBarItem.tooltip = tooltipLines.join('\n');
     statusBarItem.show();
 }
 
